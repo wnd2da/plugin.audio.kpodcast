@@ -13,6 +13,10 @@ def LOG_PLATFORM(str):
 
 
 from HTMLParser import HTMLParser
+import urllib, urllib2, cookielib
+import json
+import re
+from logic import *
 
 def LOG(str): 
 	return LOG_PLATFORM(str)
@@ -56,11 +60,6 @@ def GetURL(type, param):
 
 
 ###############################################################################
-import urllib, urllib2, cookielib
-import json
-import re
-from logic import *
-
 MENU_PODBBANG = [
 	'종합순위:',
 	'시사 및 정치:0',
@@ -109,17 +108,12 @@ def GetPodbbangProgramList(category, pageNo='1'):
 	url = PODBBANG_URL + '/ranking?kind=daily' if category is None or category == 'None' else PODBBANG_URL + '/ranking/category?kind=daily&cate=' + category
 	url = url + '&start=' + str(((int(pageNo)-1)*100)+1)
 	hasMore = 'Y' if category is None or category == 'None' else 'N'
-	LOG('URL: %s' % url)
 	request = urllib2.Request(url)
 	response = urllib2.urlopen(request)
 	data = response.read()
-	#cate dummy id title dummy summary
-	#regax = 'cate\"\>.*\"\>(.*?)\<(.*\s*){4}.*\/ch\/(.*?)\".*\"\>(.*?)\<(.*\s*){3}.*title\=\"(.*?)\<'
-	#regax = 'cate\"\>.*\"\>(.*?)\<.*\s*.*\s*.*\s*.*\s*.*\/ch\/(.*?)\".*\"\>(.*?)\<.*\s*.*title.*\s*.*title.*\s*.*title\=\"(.*?)'
 	regax = 'cate\"\>.*\"\>(.*?)\<(.*\s*){4}.*\/ch\/(.*?)\".*\"\>(.*?)\<(.*\s*){3}.*title\=\"(.*?)\<.*'
 	r = re.compile(regax)
 	m = r.findall(data)
-	#LOG('GetPodbbangProgramList %s' % m)
 	ret = []
 	for item in m:
 		info = {}
@@ -135,7 +129,6 @@ def GetPodbbangProgramList(category, pageNo='1'):
 
 def GetPodtyProgramList(category, pageNo='1'):
 	url = PODTY_URL + '/chart/podty/daily' if category is None else PODTY_URL + '/chart/daily?catId=' + category
-	LOG('>>>>> GetPodtyProgramList %s' % url)
 	request = urllib2.Request(url)
 	response = urllib2.urlopen(request)
 	data = response.read()
@@ -158,7 +151,6 @@ def GetPodtyProgramList(category, pageNo='1'):
 
 def GetPodtyEpisodeList(id, page):
 	url = ('https://www.podty.me/cast/%s/episodes?page=%s&dir=desc' % (id, page))
-	LOG('GetPodtyEpisodeList URL: %s' % url)
 	request = urllib2.Request(url)
 	response = urllib2.urlopen(request)
 	data = response.read()
@@ -184,7 +176,6 @@ def GetPodtyEpisodeList(id, page):
 
 def GetPodbbangEpisodeList(id, page):
 	url = ('http://app-api4.podbbang.com/channel?channel=%s&order=desc&count=30&page=%s' % (id, page))
-	LOG('GetPodbbangEpisodeList URL: %s' % url)
 	request = urllib2.Request(url)
 	request.add_header('Podbbang', 'os=iOS&osver=4.4.2&ver=4.35.271&device=MQAG2KH/A&device_id=359090030208175&id=4349893&auth_code=cdc986a2d1184895178e8129231a39cc6c7c31ab&nick=&is_login=N&is_adult=N')
 	request.add_header('user-agent', 'Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)')
@@ -204,11 +195,6 @@ def GetPodbbangEpisodeList(id, page):
 	return has_more, ret
 
 ###############################################################################
-import urllib, urllib2
-import json
-import re
-from logic import *
-
 MENU_ITUNES = [	'Audio:Audio', 'Video:Video']
 GENRE_LIST_URL = 'http://itunes.apple.com/WebObjects/MZStoreServices.woa/ws/genres?id=26'
 STORE_ID = '143466'  # Korea
@@ -232,13 +218,9 @@ def GetItunesGenre(type, includeSubgenre=False):
 		info['json'] = genre['rssUrls']['topAudioPodcasts'] if type == 'Audio' else genre['rssUrls']['topVideoPodcasts']
 		list.append(info)
 		if includeSubgenre and 'subgenres' in genre:
-			LOG('SUBGENRE %s' % genre['subgenres'])
 			sub_keys = genre['subgenres'].keys()
-			LOG('SUBGENRE sub_keys %s' % sub_keys)
 			for j in range(0, len(sub_keys)):
-			#for sub_genre in genre['subgenres']:
 				sub_genre = genre['subgenres'][sub_keys[j]]
-				LOG('XXXXXsub_genre %s ' % sub_genre)
 				info = {}
 				info['name'] = genre['name'] + ' - ' + sub_genre['name']
 				info['json'] = sub_genre['rssUrls']['topAudioPodcasts'] if type == 'Audio' else sub_genre['rssUrls']['topVideoPodcasts']
@@ -249,13 +231,9 @@ def GetItunesGenre(type, includeSubgenre=False):
 
 def GetItunesProgramList(url):
 	url = url.replace('/json', '/limit=50/json')
-	LOG('GetItunesProgramList URL:%s' % url)
 	request = urllib2.Request(url)
 	response = urllib2.urlopen(request)
 	data = json.load(response, encoding='utf8')
-	LOG('DATA %s' % data)
-
-
 	data = data['feed']
 	list = []
 	for item in data['entry']:
@@ -268,7 +246,6 @@ def GetItunesProgramList(url):
 		info['artist'] = item['im:artist']['label']
 		info['releaseDate'] = '' if 'releaseDate' not in item else item['im:releaseDate']['label'].split('T')[0]
 		list.append(info)
-		#LOG('INFO %s' % info)
 	return list
 
 def GetItunesEpisodeList(id, pageNo):
