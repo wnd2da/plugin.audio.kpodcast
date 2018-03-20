@@ -12,7 +12,10 @@ from logic import *
 def Main():
 	for menu in TOP_MENU_LIST:
 		tmp = menu.split(':')
-		addDir(tmp[0], None, None, True, 'Menu', tmp[1], None, None)
+		if tmp[1] == 'EBS':
+			addDir(tmp[0], None, None, True, 'EpisodeList', tmp[1], 'dummy', 1)
+		else:
+			addDir(tmp[0], None, None, True, 'Menu', tmp[1], None, None)
 	xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def Menu(p):
@@ -58,17 +61,19 @@ def EpisodeList(p):
 	id = p['param2']
 	pageNo = p['pageNo']
 	has_more, data = GetEpisodeList(type, id, pageNo)
+	isUrl = 'N' if type == 'EBS' else 'Y'
 	for item in data:
+		param = item['id'] if type == 'EBS' else item['url']
 		title = item['title']
 		title = '[VIDEO] ' + item['title'] if item['video'] == 'Y' else item['title']
 		duration = item['duration'] if 'duration' in item else 0
 		infoLabels = {"mediatype":"music","label":item['title'] ,"title":item['title'],"plot":item['plot'], "duration":duration}
-		addDir(title, None, infoLabels, False, 'PlayVideo', type, item['url'], 'Y')
+		addDir(title, None, infoLabels, False, 'PlayVideo', type, param, isUrl)
 	if pageNo != '1':
-		addDir('<< ' + __language__(30002).encode('utf8'), None, None, True, 'EpisodeList', type, id, str(int(pageNo)-1))
+		addDir('<< Previous', None, None, True, 'EpisodeList', type, id, str(int(pageNo)-1))
 
 	if has_more == 'Y':
-		addDir(__language__(30003).encode('utf8') + ' >>', None, None, True, 'EpisodeList', type, id, str(int(pageNo)+1))
+		addDir('Next >>', None, None, True, 'EpisodeList', type, id, str(int(pageNo)+1))
 	xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	
@@ -77,6 +82,7 @@ def PlayVideo( p ):
 	type = p['param']
 	param = p['param2']
 	isUrl = p['pageNo']
+	
 	if isUrl == 'Y':
 		url = param
 	else:
